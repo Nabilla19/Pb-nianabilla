@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "920327689932",
+    "project_id": "contoh-f9af6",
+    "storage_bucket": "contoh-f9af6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920327689932:android:2902b4d0c4c5e9a70ed469",
+        "android_client_info": {
+          "package_name": "com.example.pb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuxaxl8EndMuZu9cX_HEJ27KKqeam9K-o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
