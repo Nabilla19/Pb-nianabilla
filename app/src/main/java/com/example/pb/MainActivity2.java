@@ -13,7 +13,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-
 import com.example.pb.Models.UserDetails;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,56 +43,58 @@ public class MainActivity2 extends AppCompatActivity {
         emailPengguna = findViewById(R.id.emailPengguna);
         passwordSignUp = findViewById(R.id.passwordSignUp);
         nimPengguna = findViewById(R.id.nimPengguna);
+        mAuth = FirebaseAuth.getInstance();
 
         btnSignUp.setOnClickListener(view -> {
             String username, email, password, NIM;
 
-            username = String.valueOf(usernameSignUp.getText());
-            email = String.valueOf(emailPengguna.getText());
-            password = String.valueOf(passwordSignUp.getText());
-            NIM = String.valueOf(nimPengguna.getText());
+            username = String.valueOf(usernameSignUp.getText()).trim();
+            email = String.valueOf(emailPengguna.getText()).trim();
+            password = String.valueOf(passwordSignUp.getText()).trim();
+            NIM = String.valueOf(nimPengguna.getText()).trim();
 
-            if (TextUtils.isEmpty(username)){
+            if (TextUtils.isEmpty(username)) {
                 Toast.makeText(MainActivity2.this, "Enter username", Toast.LENGTH_LONG).show();
                 usernameSignUp.requestFocus();
-            } else if (TextUtils.isEmpty(email)){
+            } else if (TextUtils.isEmpty(email)) {
                 Toast.makeText(MainActivity2.this, "Enter email", Toast.LENGTH_LONG).show();
                 emailPengguna.requestFocus();
             } else if (TextUtils.isEmpty(password)) {
                 Toast.makeText(MainActivity2.this, "Enter password", Toast.LENGTH_LONG).show();
+                passwordSignUp.requestFocus();
             } else if (TextUtils.isEmpty(NIM)) {
                 Toast.makeText(MainActivity2.this, "Enter NIM", Toast.LENGTH_LONG).show();
+                nimPengguna.requestFocus();
             } else {
-                // Register user tanpa verifikasi email
                 registerUser(username, email, password, NIM);
-
             }
         });
     }
 
     private void registerUser(String username, String email, String password, String NIM) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-
-        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(MainActivity2.this, task -> {
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(MainActivity2.this, task -> {
             if (task.isSuccessful()) {
-                FirebaseUser fUser = auth.getCurrentUser();
-                String uid = fUser.getUid();
+                FirebaseUser fUser = mAuth.getCurrentUser();
+                if (fUser == null) {
+                    Toast.makeText(MainActivity2.this, "User not created", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "FirebaseUser is null after registration");
+                    return;
+                }
 
-                com.example.pb.Models.UserDetails userDetails = new UserDetails(uid, username, email, password, NIM);
+                String uid = fUser.getUid();
+                UserDetails userDetails = new UserDetails(uid, username, email, password, NIM);
 
                 DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
                 reference.child(uid).setValue(userDetails).addOnCompleteListener(task1 -> {
-                    if (task1.isSuccessful()){
+                    if (task1.isSuccessful()) {
                         Toast.makeText(MainActivity2.this, "Account created successfully!", Toast.LENGTH_LONG).show();
-
-                        // Langsung pindah ke Home tanpa verifikasi email
-                        Intent intent = new Intent(MainActivity2.this, Home.class);
+                        Intent intent = new Intent(MainActivity2.this, DashboardActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                         finish();
                     } else {
-                        Toast.makeText(MainActivity2.this, "Account registration failed", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "Register: Error");
+                        Log.e(TAG, "Database write failed: " + task1.getException());
+                        Toast.makeText(MainActivity2.this, "Account registration failed: Database error", Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {
@@ -102,8 +103,8 @@ public class MainActivity2 extends AppCompatActivity {
                 } catch (FirebaseAuthUserCollisionException e) {
                     emailPengguna.setError("Email is already registered");
                 } catch (Exception e) {
-                    Log.e(TAG, e.getMessage());
-                    Toast.makeText(MainActivity2.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Register failed: " + e.getMessage());
+                    Toast.makeText(MainActivity2.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
